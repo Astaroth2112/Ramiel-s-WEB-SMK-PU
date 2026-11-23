@@ -1,7 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) || '').trim();
-const supabaseAnonKey = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || '').trim();
+function cleanVal(raw: string | undefined): string {
+  return (raw || '').trim().replace(/^["']|["']$/g, '').trim();
+}
+
+const buildSupabaseUrl = cleanVal(import.meta.env.VITE_SUPABASE_URL as string | undefined);
+const buildSupabaseAnonKey = cleanVal(import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
 
 function isValidHttpUrl(value: string): boolean {
   if (!value) return false;
@@ -13,10 +17,12 @@ function isValidHttpUrl(value: string): boolean {
   }
 }
 
-function initSupabaseClient(): SupabaseClient | null {
-  if (!isValidHttpUrl(supabaseUrl) || !supabaseAnonKey) return null;
+function createSafeSupabase(url: string, key: string): SupabaseClient | null {
+  const cleanUrl = cleanVal(url);
+  const cleanKey = cleanVal(key);
+  if (!isValidHttpUrl(cleanUrl) || !cleanKey) return null;
   try {
-    return createClient(supabaseUrl, supabaseAnonKey, {
+    return createClient(cleanUrl, cleanKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -27,5 +33,42 @@ function initSupabaseClient(): SupabaseClient | null {
   }
 }
 
-export const supabase: SupabaseClient | null = initSupabaseClient();
-export const isSupabaseConfigured = Boolean(supabase);
+export let supabase: SupabaseClient | null = createSafeSupabase(
+  buildSupabaseUrl,
+  buildSupabaseAnonKey,
+);
+export let isSupabaseConfigured = Boolean(supabase);
+
+let runtimeLookupPromise: Promise<boolean> | null = null;
+
+export async function ensureSupabaseConfigured(): Promise<boolean> {
+  if (isSupabaseConfigured && supabase) return true;
+  if (runtimeLookupPromise) return runtimeLookupPromise;
+
+  runtimeLookupPromise = (async () => {
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        return false;
+      }
+      const data = (await res.json()) as {
+        publicSupabaseUrl?: string;
+        publicSupabaseAnonKey?: string;
+      };
+      if (data.publicSupabaseUrl && data.publicSupabaseAnonKey) {
+        const client = createSafeSupabase(data.publicSupabaseUrl, data.publicSupabaseAnonKey);
+        if (client) {
+          supabase = client;
+          isSupabaseConfigured = true;
+          return true;
+        }
+      }
+    } catch {
+      // Ignore runtime health probe failures on pure static hosting
+    }
+    return false;
+  })();
+
+  return runtimeLookupPromise;
+}

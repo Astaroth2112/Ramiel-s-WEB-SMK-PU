@@ -1,5 +1,9 @@
 import { clientFallbackApi } from './clientFallbackApi';
-import { isSupabaseConfigured, supabase } from './supabaseClient';
+import {
+  ensureSupabaseConfigured,
+  isSupabaseConfigured,
+  supabase,
+} from './supabaseClient';
 import type {
   DashboardSummary,
   EmployeeAttendanceRecord,
@@ -39,6 +43,10 @@ async function withBackendOrFallback<T>(
   forceDirectSupabase = false,
 ): Promise<T> {
   const token = getStoredToken();
+
+  if (forceDirectSupabase && !isSupabaseConfigured && !token?.startsWith('local-fallback:')) {
+    await ensureSupabaseConfigured();
+  }
 
   if (
     (forceDirectSupabase && isSupabaseConfigured && supabase) ||

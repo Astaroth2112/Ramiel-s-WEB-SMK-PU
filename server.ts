@@ -445,9 +445,16 @@ async function startServer() {
   // System Info
   // ---------------------------------------------------------------------------
   app.get('/api/health', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
     res.json({
       ok: true,
       backend: useSupabase ? 'supabase' : 'local-store',
+      ...(isValidHttpUrl(SUPABASE_URL) && SUPABASE_ANON_KEY
+        ? {
+            publicSupabaseUrl: SUPABASE_URL,
+            publicSupabaseAnonKey: SUPABASE_ANON_KEY,
+          }
+        : {}),
     });
   });
 

@@ -1,6 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api, getStoredToken, setStoredToken } from '../lib/api';
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+import {
+  ensureSupabaseConfigured,
+  isSupabaseConfigured,
+  supabase,
+} from '../lib/supabaseClient';
 import type { UserProfile } from '../types';
 
 interface AuthContextValue {
@@ -26,6 +30,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     let token = getStoredToken();
+    if (!isSupabaseConfigured) {
+      let hasSbStorage = false;
+      try {
+        hasSbStorage = Object.keys(localStorage).some(
+          (k) => k.startsWith('sb-') && k.endsWith('-auth-token'),
+        );
+      } catch {
+        hasSbStorage = false;
+      }
+      if (hasSbStorage || (token && !token.startsWith('local-fallback:'))) {
+        await ensureSupabaseConfigured();
+      }
+    }
     if (!token && isSupabaseConfigured && supabase) {
       try {
         const { data } = await supabase.auth.getSession();

@@ -4,32 +4,56 @@ import fs from 'fs';
 import path from 'path';
 import {defineConfig, loadEnv} from 'vite';
 
+function cleanEnvValue(raw: string | undefined): string {
+  return (raw || '').trim().replace(/^["']|["']$/g, '').trim();
+}
+
+function findEnvBySuffix(
+  sources: Record<string, string | undefined>[],
+  preferredKeys: string[],
+  suffixRegex: RegExp,
+  excludeRegex: RegExp,
+): string {
+  for (const key of preferredKeys) {
+    for (const src of sources) {
+      const val = cleanEnvValue(src[key]);
+      if (val) return val;
+    }
+  }
+  for (const src of sources) {
+    for (const [key, rawVal] of Object.entries(src)) {
+      if (excludeRegex.test(key)) continue;
+      if (suffixRegex.test(key)) {
+        const val = cleanEnvValue(rawVal);
+        if (val) return val;
+      }
+    }
+  }
+  return '';
+}
+
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const supabaseUrl = (
-    env.VITE_SUPABASE_URL ||
-    env.NEXT_PUBLIC_SUPABASE_URL ||
-    env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.SUPABASE_URL ||
-    ''
-  ).trim();
-  const supabaseAnonKey = (
-    env.VITE_SUPABASE_ANON_KEY ||
-    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    env.SUPABASE_ANON_KEY ||
-    env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    ''
-  ).trim();
+  const sources = [env, process.env];
+  const supabaseUrl = findEnvBySuffix(
+    sources,
+    ['VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL'],
+    /SUPABASE_URL$/i,
+    /POSTGRES|DATABASE|PRISMA/i,
+  );
+  const supabaseAnonKey = findEnvBySuffix(
+    sources,
+    [
+      'VITE_SUPABASE_ANON_KEY',
+      'VITE_SUPABASE_PUBLISHABLE_KEY',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+      'SUPABASE_ANON_KEY',
+      'SUPABASE_PUBLISHABLE_KEY',
+    ],
+    /SUPABASE_(ANON|PUBLISHABLE)_KEY$/i,
+    /SERVICE|SECRET|ADMIN|JWT/i,
+  );
 
   return {
     define: {
