@@ -371,6 +371,11 @@ export const clientFallbackApi = {
     const db = readLocalDb();
     const user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (!user || user.password !== password) {
+      if (!user) {
+        throw new Error(
+          'Email tidak ditemukan di mode demo lokal. Jika Anda login dengan akun Supabase, pastikan VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY sudah dipasang di Environment Variables lalu Redeploy.',
+        );
+      }
       throw new Error('Email atau kata sandi tidak sesuai.');
     }
     return {
