@@ -364,11 +364,35 @@ async function authenticateRequest(
       res.status(401).json({ error: 'Token Supabase tidak valid atau kedaluwarsa.' });
       return;
     }
-    const { data: profile } = await supabaseAdmin
+    let { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('id', data.user.id)
-      .single();
+      .maybeSingle();
+
+    if (!profile) {
+      const { count } = await supabaseAdmin
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      const meta = (data.user.user_metadata || {}) as Record<string, unknown>;
+      const fallbackRole = determineRoleForNewUser(
+        count || 0,
+        meta.role as UserRole | undefined,
+      );
+      const { data: healed } = await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          email: data.user.email || '',
+          full_name: String(meta.full_name || data.user.email?.split('@')[0] || 'Pengguna'),
+          nip: String(meta.nip || ''),
+          position_title: String(meta.position_title || (fallbackRole === 'admin' ? 'Administrator Sistem' : 'Staf')),
+          role: fallbackRole,
+        })
+        .select('*')
+        .single();
+      profile = healed;
+    }
 
     if (!profile) {
       res.status(401).json({ error: 'Profil pengguna tidak ditemukan di Supabase.' });
@@ -413,6 +437,10 @@ async function startServer() {
   const app = express();
   app.use(express.json());
 
+  app.get('/favicon.ico', (_req, res) => {
+    res.status(204).end();
+  });
+
   // ---------------------------------------------------------------------------
   // System Info
   // ---------------------------------------------------------------------------
@@ -440,18 +468,54 @@ async function startServer() {
         res.status(401).json({ error: error?.message || 'Email atau kata sandi salah.' });
         return;
       }
-      const { data: profile } = await supabaseAdmin
+      let { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('*')
         .eq('id', data.user.id)
-        .single();
+        .maybeSingle();
+
       if (!profile) {
-        res.status(404).json({ error: 'Profil pengguna tidak ditemukan.' });
-        return;
+        const { count } = await supabaseAdmin
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        const meta = (data.user.user_metadata || {}) as Record<string, unknown>;
+        const fallbackRole = determineRoleForNewUser(
+          count || 0,
+          meta.role as UserRole | undefined,
+        );
+        const { data: healed } = await supabaseAdmin
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: data.user.email || email,
+            full_name: String(meta.full_name || email.split('@')[0] || 'Pengguna'),
+            nip: String(meta.nip || ''),
+            position_title: String(meta.position_title || (fallbackRole === 'admin' ? 'Administrator Sistem' : 'Staf')),
+            role: fallbackRole,
+          })
+          .select('*')
+          .single();
+        profile = healed;
       }
+
+      const meta = (data.user.user_metadata || {}) as Record<string, unknown>;
+      const resolvedProfile: UserProfile = profile
+        ? mapSupabaseProfile(profile)
+        : {
+            id: data.user.id,
+            email: data.user.email || email,
+            fullName: String(meta.full_name || email.split('@')[0] || 'Pengguna'),
+            nip: String(meta.nip || ''),
+            positionTitle: String(meta.position_title || 'Administrator Sistem'),
+            role: (meta.role as UserRole) || 'admin',
+            authProvider: 'supabase',
+            createdAt: data.user.created_at || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
       res.json({
         token: data.session.access_token,
-        user: mapSupabaseProfile(profile),
+        user: resolvedProfile,
         backend: 'supabase',
       });
       return;
@@ -1429,6 +1493,10 @@ async function startServer() {
     });
   });
 
+  app.use('/api', (_req, res) => {
+    res.status(404).json({ error: 'Endpoint API tidak ditemukan.' });
+  });
+
   // ---------------------------------------------------------------------------
   // Frontend Serving (Vite Dev Middleware or Static Production Build)
   // ---------------------------------------------------------------------------
@@ -1440,8 +1508,18 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distDir = path.resolve(process.cwd(), 'dist');
-    app.use(express.static(distDir));
+    app.use(
+      express.static(distDir, {
+        index: false,
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          }
+        },
+      }),
+    );
     app.get('*', (_req, res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.sendFile(path.join(distDir, 'index.html'));
     });
   }

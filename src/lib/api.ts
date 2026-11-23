@@ -1,3 +1,5 @@
+import { clientFallbackApi } from './clientFallbackApi';
+import { isSupabaseConfigured, supabase } from './supabaseClient';
 import type {
   DashboardSummary,
   EmployeeAttendanceRecord,
@@ -10,6 +12,8 @@ import type {
 } from '../types';
 
 const TOKEN_STORAGE_KEY = 'smk_prima_unggul_token';
+
+let backendApiUnavailable = false;
 
 export function getStoredToken(): string | null {
   try {
@@ -28,8 +32,22 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
-async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function withBackendOrFallback<T>(
+  url: string,
+  options: RequestInit,
+  fallbackFn: (token: string | null) => Promise<T>,
+  forceDirectSupabase = false,
+): Promise<T> {
   const token = getStoredToken();
+
+  if (
+    (forceDirectSupabase && isSupabaseConfigured && supabase) ||
+    backendApiUnavailable ||
+    token?.startsWith('local-fallback:')
+  ) {
+    return fallbackFn(token);
+  }
+
   const headers = new Headers(options.headers);
   if (!headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
@@ -38,20 +56,57 @@ async function apiFetch<T>(url: string, options: RequestInit = {}): Promise<T> {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(url, { ...options, headers });
-  const data = (await res.json().catch(() => ({}))) as { error?: string } & T;
-  if (!res.ok) {
-    throw new Error(data.error || `Permintaan gagal (${res.status})`);
+  let res: Response;
+  try {
+    res = await fetch(url, { ...options, cache: 'no-store', headers });
+  } catch {
+    backendApiUnavailable = true;
+    return fallbackFn(token);
   }
-  return data;
+
+  const contentType = res.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+
+  if (!isJson) {
+    backendApiUnavailable = true;
+    return fallbackFn(token);
+  }
+
+  const rawText = await res.text();
+  let data: ({ error?: string } & T) | null = null;
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText) as { error?: string } & T;
+    } catch {
+      data = null;
+    }
+  }
+
+  if (res.status === 404 || res.status === 405 || res.status === 501 || res.status === 502 || res.status === 503) {
+    if (!data?.error || data.error === 'Endpoint API tidak ditemukan.') {
+      backendApiUnavailable = true;
+      return fallbackFn(token);
+    }
+  }
+
+  if (!res.ok) {
+    throw new Error(data?.error || `Permintaan gagal (${res.status})`);
+  }
+
+  return (data || {}) as T;
 }
 
 export const api = {
   login(email: string, password: string) {
-    return apiFetch<{ token: string; user: UserProfile; backend: string }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
+    return withBackendOrFallback<{ token: string; user: UserProfile; backend: string }>(
+      '/api/auth/login',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      },
+      () => clientFallbackApi.login(email, password),
+      true,
+    );
   },
 
   register(payload: {
@@ -61,22 +116,42 @@ export const api = {
     positionTitle: string;
     password: string;
   }) {
-    return apiFetch<{ token: string; user: UserProfile }>('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return withBackendOrFallback<{ token: string; user: UserProfile }>(
+      '/api/auth/register',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      () => clientFallbackApi.register(payload),
+      true,
+    );
   },
 
   me() {
-    return apiFetch<{ user: UserProfile; backend: string }>('/api/auth/me');
+    return withBackendOrFallback<{ user: UserProfile; backend: string }>(
+      '/api/auth/me',
+      {},
+      (token) => clientFallbackApi.me(token),
+      true,
+    );
   },
 
   dashboardSummary() {
-    return apiFetch<DashboardSummary>('/api/dashboard/summary');
+    return withBackendOrFallback<DashboardSummary>(
+      '/api/dashboard/summary',
+      {},
+      (token) => clientFallbackApi.dashboardSummary(token),
+      true,
+    );
   },
 
   getUsers() {
-    return apiFetch<{ users: UserProfile[] }>('/api/users');
+    return withBackendOrFallback<{ users: UserProfile[] }>(
+      '/api/users',
+      {},
+      (token) => clientFallbackApi.getUsers(token),
+      true,
+    );
   },
 
   createUser(payload: {
@@ -87,10 +162,14 @@ export const api = {
     role: UserRole;
     password: string;
   }) {
-    return apiFetch<{ user: UserProfile }>('/api/users', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return withBackendOrFallback<{ user: UserProfile }>(
+      '/api/users',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      (token) => clientFallbackApi.createUser(token, payload),
+    );
   },
 
   updateUser(
@@ -104,16 +183,24 @@ export const api = {
       password?: string;
     },
   ) {
-    return apiFetch<{ user: UserProfile }>(`/api/users/${encodeURIComponent(id)}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
+    return withBackendOrFallback<{ user: UserProfile }>(
+      `/api/users/${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+      (token) => clientFallbackApi.updateUser(token, id, payload),
+    );
   },
 
   deleteUser(id: string) {
-    return apiFetch<{ deleted: boolean; id: string }>(`/api/users/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    });
+    return withBackendOrFallback<{ deleted: boolean; id: string }>(
+      `/api/users/${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+      },
+      (token) => clientFallbackApi.deleteUser(token, id),
+    );
   },
 
   getStudents(params?: { className?: string; search?: string }) {
@@ -121,27 +208,47 @@ export const api = {
     if (params?.className) sp.set('className', params.className);
     if (params?.search) sp.set('search', params.search);
     const qs = sp.toString();
-    return apiFetch<{ students: Student[] }>(`/api/students${qs ? `?${qs}` : ''}`);
+    return withBackendOrFallback<{ students: Student[] }>(
+      `/api/students${qs ? `?${qs}` : ''}`,
+      {},
+      (token) => clientFallbackApi.getStudents(token, params),
+      true,
+    );
   },
 
   createStudent(payload: { nis: string; name: string; className: string }) {
-    return apiFetch<{ student: Student }>('/api/students', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
+    return withBackendOrFallback<{ student: Student }>(
+      '/api/students',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+      (token) => clientFallbackApi.createStudent(token, payload),
+      true,
+    );
   },
 
   updateStudent(id: string, payload: { nis: string; name: string; className: string }) {
-    return apiFetch<{ student: Student }>(`/api/students/${encodeURIComponent(id)}`, {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
+    return withBackendOrFallback<{ student: Student }>(
+      `/api/students/${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+      (token) => clientFallbackApi.updateStudent(token, id, payload),
+      true,
+    );
   },
 
   deleteStudent(id: string) {
-    return apiFetch<{ deleted: boolean; id: string }>(`/api/students/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    });
+    return withBackendOrFallback<{ deleted: boolean; id: string }>(
+      `/api/students/${encodeURIComponent(id)}`,
+      {
+        method: 'DELETE',
+      },
+      (token) => clientFallbackApi.deleteStudent(token, id),
+      true,
+    );
   },
 
   getEmployeeAttendance(params?: {
@@ -156,22 +263,35 @@ export const api = {
     if (params?.endDate) sp.set('endDate', params.endDate);
     if (params?.role) sp.set('role', params.role);
     const qs = sp.toString();
-    return apiFetch<{ records: EmployeeAttendanceRecord[] }>(
+    return withBackendOrFallback<{ records: EmployeeAttendanceRecord[] }>(
       `/api/attendance/employees${qs ? `?${qs}` : ''}`,
+      {},
+      (token) => clientFallbackApi.getEmployeeAttendance(token, params),
+      true,
     );
   },
 
   employeeCheckIn(status: EmployeeAttendanceStatus, notes: string) {
-    return apiFetch<{ record: EmployeeAttendanceRecord }>('/api/attendance/employees/check-in', {
-      method: 'POST',
-      body: JSON.stringify({ status, notes }),
-    });
+    return withBackendOrFallback<{ record: EmployeeAttendanceRecord }>(
+      '/api/attendance/employees/check-in',
+      {
+        method: 'POST',
+        body: JSON.stringify({ status, notes }),
+      },
+      (token) => clientFallbackApi.employeeCheckIn(token, status, notes),
+      true,
+    );
   },
 
   employeeCheckOut() {
-    return apiFetch<{ record: EmployeeAttendanceRecord }>('/api/attendance/employees/check-out', {
-      method: 'POST',
-    });
+    return withBackendOrFallback<{ record: EmployeeAttendanceRecord }>(
+      '/api/attendance/employees/check-out',
+      {
+        method: 'POST',
+      },
+      (token) => clientFallbackApi.employeeCheckOut(token),
+      true,
+    );
   },
 
   getStudentAttendance(params?: {
@@ -188,8 +308,11 @@ export const api = {
     if (params?.className) sp.set('className', params.className);
     if (params?.search) sp.set('search', params.search);
     const qs = sp.toString();
-    return apiFetch<{ records: StudentAttendanceRecord[] }>(
+    return withBackendOrFallback<{ records: StudentAttendanceRecord[] }>(
       `/api/attendance/students${qs ? `?${qs}` : ''}`,
+      {},
+      (token) => clientFallbackApi.getStudentAttendance(token, params),
+      true,
     );
   },
 
@@ -197,9 +320,14 @@ export const api = {
     date: string,
     entries: { studentId: string; status: StudentAttendanceStatus; notes: string }[],
   ) {
-    return apiFetch<{ savedCount: number }>('/api/attendance/students/batch', {
-      method: 'POST',
-      body: JSON.stringify({ date, entries }),
-    });
+    return withBackendOrFallback<{ savedCount: number }>(
+      '/api/attendance/students/batch',
+      {
+        method: 'POST',
+        body: JSON.stringify({ date, entries }),
+      },
+      (token) => clientFallbackApi.saveStudentAttendanceBatch(token, date, entries),
+      true,
+    );
   },
 };

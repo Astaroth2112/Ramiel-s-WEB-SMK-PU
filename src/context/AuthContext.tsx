@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { api, getStoredToken, setStoredToken } from '../lib/api';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import type { UserProfile } from '../types';
 
 interface AuthContextValue {
@@ -24,7 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
 
   const refreshUser = useCallback(async () => {
-    const token = getStoredToken();
+    let token = getStoredToken();
+    if (!token && isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.access_token) {
+          token = data.session.access_token;
+          setStoredToken(token);
+        }
+      } catch {
+        // ignore session restore error
+      }
+    }
     if (!token) {
       setUser(null);
       setLoading(false);
@@ -73,6 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setStoredToken(null);
     setUser(null);
+    if (isSupabaseConfigured && supabase) {
+      void supabase.auth.signOut();
+    }
   }, []);
 
   return (

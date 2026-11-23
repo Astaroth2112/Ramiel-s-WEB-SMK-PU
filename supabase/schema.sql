@@ -123,6 +123,10 @@ create policy "Users can view own profile or admin views all"
   on public.profiles for select
   using (id = auth.uid() or public.current_user_role() = 'admin');
 
+create policy "Users can insert own profile"
+  on public.profiles for insert
+  with check (id = auth.uid());
+
 create policy "Admin manages all profiles"
   on public.profiles for all
   using (public.current_user_role() = 'admin');
