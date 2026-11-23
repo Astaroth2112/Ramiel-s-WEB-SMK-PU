@@ -1,0 +1,334 @@
+{
+  "users": [
+    {
+      "id": "usr-admin-01",
+      "email": "admin@smkprimaunggul.sch.id",
+      "fullName": "Hendra Wijaya, M.Pd.",
+      "nip": "197904122005011002",
+      "positionTitle": "Kepala Tata Usaha & Admin Sistem",
+      "role": "admin",
+      "authProvider": "local",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z",
+      "passwordHash": "5989e17a208554aec8f72dce3e7f2a88:111e62f347c22e284312bcfa7908c03bad6c812ae960f06a323ea31a9be977d8dd1b9e8eae6bd1d9c1d8ca05c6b8e435589b1637180bcae02466fdf59b081a9a"
+    },
+    {
+      "id": "usr-guru-01",
+      "email": "guru@smkprimaunggul.sch.id",
+      "fullName": "Siti Rahmawati, S.Kom.",
+      "nip": "198809152014022004",
+      "positionTitle": "Guru Produktif TKJ",
+      "role": "guru",
+      "authProvider": "local",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z",
+      "passwordHash": "5989e17a208554aec8f72dce3e7f2a88:111e62f347c22e284312bcfa7908c03bad6c812ae960f06a323ea31a9be977d8dd1b9e8eae6bd1d9c1d8ca05c6b8e435589b1637180bcae02466fdf59b081a9a"
+    },
+    {
+      "id": "usr-guru-02",
+      "email": "arief.dkv@smkprimaunggul.sch.id",
+      "fullName": "Arief Nugroho, S.Sn.",
+      "nip": "199103222019031007",
+      "positionTitle": "Guru Produktif DKV & BC",
+      "role": "guru",
+      "authProvider": "local",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z",
+      "passwordHash": "5989e17a208554aec8f72dce3e7f2a88:111e62f347c22e284312bcfa7908c03bad6c812ae960f06a323ea31a9be977d8dd1b9e8eae6bd1d9c1d8ca05c6b8e435589b1637180bcae02466fdf59b081a9a"
+    },
+    {
+      "id": "usr-tendik-01",
+      "email": "tendik@smkprimaunggul.sch.id",
+      "fullName": "Budi Santoso, A.Md.",
+      "nip": "199311082020121003",
+      "positionTitle": "Staf Administrasi Akademik",
+      "role": "tenaga_kependidikan",
+      "authProvider": "local",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z",
+      "passwordHash": "5989e17a208554aec8f72dce3e7f2a88:111e62f347c22e284312bcfa7908c03bad6c812ae960f06a323ea31a9be977d8dd1b9e8eae6bd1d9c1d8ca05c6b8e435589b1637180bcae02466fdf59b081a9a"
+    }
+  ],
+  "students": [
+    {
+      "id": "stu-01",
+      "nis": "20261001",
+      "name": "Aditya Pratama",
+      "className": "X TKJ 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-02",
+      "nis": "20261002",
+      "name": "Aulia Putri Maharani",
+      "className": "X TKJ 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-03",
+      "nis": "20261003",
+      "name": "Bagas Kurniawan",
+      "className": "X TKJ 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-04",
+      "nis": "20261004",
+      "name": "Citra Lestari",
+      "className": "X TKJ 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-05",
+      "nis": "20261005",
+      "name": "Dimas Saputra",
+      "className": "X DKV 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-06",
+      "nis": "20261006",
+      "name": "Elvira Ningsih",
+      "className": "X DKV 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-07",
+      "nis": "20261007",
+      "name": "Fajar Ramadhan",
+      "className": "X DKV 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-08",
+      "nis": "20252001",
+      "name": "Gita Puspita",
+      "className": "XI AK 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-09",
+      "nis": "20252002",
+      "name": "Hafiz Maulana",
+      "className": "XI AK 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-10",
+      "nis": "20252003",
+      "name": "Indah Permata Sari",
+      "className": "XI BC 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-11",
+      "nis": "20252004",
+      "name": "Joko Susilo",
+      "className": "XI BC 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-12",
+      "nis": "20243001",
+      "name": "Kartika Dewi",
+      "className": "XII MPLB 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-13",
+      "nis": "20243002",
+      "name": "Lutfi Hakim",
+      "className": "XII MPLB 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-14",
+      "nis": "20243003",
+      "name": "Maya Anggraini",
+      "className": "XII BD 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-15",
+      "nis": "20243004",
+      "name": "Nanda Rizky",
+      "className": "XII BD 1",
+      "createdAt": "2026-11-19T04:19:24.313Z",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    }
+  ],
+  "employeeAttendance": [
+    {
+      "id": "emp-att-01",
+      "userId": "usr-admin-01",
+      "userName": "Hendra Wijaya, M.Pd.",
+      "userEmail": "admin@smkprimaunggul.sch.id",
+      "userRole": "admin",
+      "nip": "197904122005011002",
+      "date": "2026-11-18",
+      "status": "Hadir",
+      "checkInTime": "2026-11-18T06:55:00.000Z",
+      "checkOutTime": "2026-11-18T15:30:00.000Z",
+      "notes": "Apel pagi & supervisi administrasi"
+    },
+    {
+      "id": "emp-att-02",
+      "userId": "usr-guru-01",
+      "userName": "Siti Rahmawati, S.Kom.",
+      "userEmail": "guru@smkprimaunggul.sch.id",
+      "userRole": "guru",
+      "nip": "198809152014022004",
+      "date": "2026-11-18",
+      "status": "Hadir",
+      "checkInTime": "2026-11-18T07:02:00.000Z",
+      "checkOutTime": "2026-11-18T14:45:00.000Z",
+      "notes": "Mengajar Lab TKJ"
+    },
+    {
+      "id": "emp-att-03",
+      "userId": "usr-guru-02",
+      "userName": "Arief Nugroho, S.Sn.",
+      "userEmail": "arief.dkv@smkprimaunggul.sch.id",
+      "userRole": "guru",
+      "nip": "199103222019031007",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "checkInTime": "2026-11-19T00:05:00.000Z",
+      "checkOutTime": null,
+      "notes": "Praktikum Studio DKV"
+    },
+    {
+      "id": "emp-att-078e09fa",
+      "userId": "usr-tendik-01",
+      "userName": "Budi Santoso, A.Md.",
+      "userEmail": "tendik@smkprimaunggul.sch.id",
+      "userRole": "tenaga_kependidikan",
+      "nip": "199311082020121003",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "checkInTime": "2026-11-19T04:22:20.268Z",
+      "checkOutTime": "2026-11-19T04:22:20.333Z",
+      "notes": ""
+    }
+  ],
+  "studentAttendance": [
+    {
+      "id": "stu-att-01",
+      "studentId": "stu-01",
+      "studentNis": "20261001",
+      "studentName": "Aditya Pratama",
+      "className": "X TKJ 1",
+      "date": "2026-11-18",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-att-02",
+      "studentId": "stu-02",
+      "studentNis": "20261002",
+      "studentName": "Aulia Putri Maharani",
+      "className": "X TKJ 1",
+      "date": "2026-11-18",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-att-03",
+      "studentId": "stu-03",
+      "studentNis": "20261003",
+      "studentName": "Bagas Kurniawan",
+      "className": "X TKJ 1",
+      "date": "2026-11-18",
+      "status": "Sakit",
+      "notes": "Surat keterangan orang tua",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-att-04",
+      "studentId": "stu-04",
+      "studentNis": "20261004",
+      "studentName": "Citra Lestari",
+      "className": "X TKJ 1",
+      "date": "2026-11-18",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:19:24.313Z"
+    },
+    {
+      "id": "stu-att-887e1260",
+      "studentId": "stu-01",
+      "studentNis": "20261001",
+      "studentName": "Aditya Pratama",
+      "className": "X TKJ 1",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:22:17.987Z"
+    },
+    {
+      "id": "stu-att-5ecb2c96",
+      "studentId": "stu-02",
+      "studentNis": "20261002",
+      "studentName": "Aulia Putri Maharani",
+      "className": "X TKJ 1",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:22:17.987Z"
+    },
+    {
+      "id": "stu-att-ca21f075",
+      "studentId": "stu-03",
+      "studentNis": "20261003",
+      "studentName": "Bagas Kurniawan",
+      "className": "X TKJ 1",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:22:17.987Z"
+    },
+    {
+      "id": "stu-att-0645a992",
+      "studentId": "stu-04",
+      "studentNis": "20261004",
+      "studentName": "Citra Lestari",
+      "className": "X TKJ 1",
+      "date": "2026-11-19",
+      "status": "Hadir",
+      "notes": "",
+      "recordedById": "usr-guru-01",
+      "recordedByName": "Siti Rahmawati, S.Kom.",
+      "updatedAt": "2026-11-19T04:22:17.987Z"
+    }
+  ]
+}
